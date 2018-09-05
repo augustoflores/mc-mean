@@ -1,0 +1,9 @@
+Raul 100
+Augusto 50
+Raul -50
+Augusto 50
+Raul 100
+Augusto 100
+
+Raul 100
+Alan 5
