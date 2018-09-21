@@ -1,17 +1,12 @@
 var inquirer = require('inquirer');
 const MongoClient = require('mongodb').MongoClient;
 const url = 'mongodb://localhost:27017';
-const dbName = "mctrainee";
 const request = require('request');
 
-MongoClient.connect(url, conectado);
+conectado();
 
 function conectado(err, conn) {
-
-    if (err) console.log(err)
-
-    const db = conn.db(dbName)
-
+     if (err) console.log(err)
     //var fs = require("fs");
     //let dataRegistros = fs.readFileSync("registro.txt").toString().split("\n");
 
@@ -40,6 +35,11 @@ function conectado(err, conn) {
                     name: "Registrar",
                     value: "registra",
                     short: "Registrar",
+                },
+                {
+                    name: "Salir",
+                    value: "salir",
+                    short: "Salir",
                 }
                 
             ]
@@ -52,79 +52,86 @@ function conectado(err, conn) {
             // Use user feedback for... whatever!!
             switch (answers.accion) {
                 case "consulta":
-                    calculaTotales(db);
+                    calculaTotales();
                     break;
                 case "retira":
-                    preguntaPersonas();
+                    preguntaPersonas(-1);
                     break;
                 case "deposita":
-                    preguntaPersonas();
+                    preguntaPersonas(1);
                     break;
                 case "registra":
-                    registraPersonas(db);
+                    registraPersonas();
                     break;
+                case "salir":
+                    return false;
+                break;
                 default:
                     break;
             }
         });
 }
 
-function preguntaPersonas() {
-    request("http://localhost:4000/people",function(error, response,body){
-            console.log(body)
+
+
+function preguntaPersonas(multi) {
+    request("http://localhost:4000/people",function(error, res,body){
+            console.log(body);
+            let people = JSON.parse(body);
+
+            inquirer
+            .prompt([{
+                    type: "list",
+                    name: "name",
+                    message: "¿Para quien es la operacion?",
+                    choices: people.map(people=>people.name)
+                },
+                {
+                    type: "input",
+                    name: "amount",
+                    message: "Escribe la cantidad"
+                }
+            ])
+            .then(answers => {
+                console.log(answers)
+                agregaRegistro(answers.name, answers.amount,multi)
+            })
         }
-    )
-
-    // db.collection('people').find().toArray((err,res)=>{
-    //     inquirer
-    //     .prompt([{
-    //             type: "list",
-    //             name: "name",
-    //             message: "¿Para quien es la operacion?",
-    //             choices: res.map(persona=>persona.name)
-    //         },
-    //         {
-    //             type: "input",
-    //             name: "amount",
-    //             message: "Escribe la cantidad"
-    //         }
-    //     ])
-    //     .then(answers => {
-    //         //console.log(answers);
-    //         db.collection('logs').insert({name:answers.name, amount:multi * answers.amount},(err,res)=>{
-    //             console.log(res);
-    //         })
-
-    //     })
-    // })    
-}
+    )}
 
 function calculaTotales(db) {
-    request("http://localhost:4000/people",function(error, response,body){
+    request("http://localhost:4000/logs",function(error, response,body){
             let movimientos = {};
-            console.log(body);
-            // body.forEach(element => {
-            //     let nombre = element.name
-            //     let cantidad = element.amount;
-            //     if (Object.keys(movimientos).includes(nombre)) {
-            //         movimientos[nombre] += cantidad;
-            //     } else {
-            //         movimientos[nombre] = cantidad;
-            //     }
-            // });
+            let logs = JSON.parse(body);
+            console.log(logs.length);
+            logs.forEach(element => {
+                let nombre = element.name
+                let cantidad = Number.parseInt(element.amount);
+                if (Object.keys(movimientos).includes(nombre)) {
+                    movimientos[nombre] += cantidad;
+                } else {
+                    movimientos[nombre] = cantidad;
+                }
+            });
             console.log(movimientos);
+            conectado();
+
     })
 }
 
-function retirarCantidad(persona, cantidad) {
+function agregaRegistro(name, amount,multi) {
+    request.post(
+        'http://localhost:4000/logs',
+         {json:{name, amount: amount * multi}},
+         function(error, response, body){
+            console.log(body);
+            conectado();
 
+        }
+    );
 }
 
-function depositarCantidad(persona, cantidad) {
-
-}
-
-function registraPersonas(db){
+function registraPersonas(){
     inquirer
     .prompt([
         {
@@ -139,14 +146,15 @@ function registraPersonas(db){
         },
     ])
     .then(answers => {
-        //console.log(answers);
-        db.collection('people').insert({name:answers.name},(err,res)=>{
-            if (err) console.log(err);
-        })        
-        db.collection('logs').insert({name:answers.name, amount:answers.amount},(err,res)=>{
-            if (err) console.log(err);
-        })
+        request.post(
+            'http://localhost:4000/people',
+             {json: answers},
+             function(error, response, body){
+                console.log(body);
+                conectado();
 
+            }
+        );
     })    
-
 }
+

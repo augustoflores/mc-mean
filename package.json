@@ -9,8 +9,10 @@
   "author": "Agus",
   "license": "ISC",
   "dependencies": {
+    "body-parser": "^1.18.3",
     "cowsay": "^1.3.1",
     "express": "^4.16.3",
+    "hbs": "^4.0.1",
     "inquirer": "^6.2.0",
     "mongodb": "^3.1.4",
     "request": "^2.88.0"
