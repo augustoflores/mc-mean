@@ -1,0 +1,11 @@
+<script src="js/depositar.js"></script>
+<h1>Depositar</h1>
+<label>Selecciona receptor</label><br>
+<select id="name">
+    {{#each people}}
+        <option value="{{name}}">{{name}}</option>
+    {{/each}}
+</select><br>
+<label>Amount</label>
+<input type="text"  id="amount"><br>
+<button onclick="retirar()">Enviar</button>
