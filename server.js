@@ -7,8 +7,12 @@ const dbName = "mctrainee";
 var logRoutes= require("./routes/logs");
 var peopleRoutes= require("./routes/people");
 var viewRoutes= require("./routes/views");
+var cors = require('cors');
 
 var app = express();
+
+// use it before all route definitions
+app.use(cors({origin: 'http://localhost:8000'}));
 
 app.use(bodyParser.urlencoded({
   extended: false
